@@ -1,8 +1,9 @@
-from image_data import ImageData
+from pixiv.image_data import ImageData
 import requests
 from bs4 import BeautifulSoup
 import json
-from src.utils.utils import *
+from utils.utils import *
+import time
 import threading
 
 
@@ -47,9 +48,7 @@ class Pixiv():
         fmt = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}& s_mode = s_tag & ' \
               'type = all & lang = zh '
         urls = [fmt.format(self.search, self.search, p)
-                for p in range(1, self.page)]
-        if (self.page == 1):
-            urls = [fmt.format(self.search, self.search, 1)]
+                for p in range(1, self.page+1)]
         self.urls = urls
 
     def run_get_picture_url(self):
@@ -60,7 +59,8 @@ class Pixiv():
         _count = 0
         while len(self.urls) > 0:
             url = self.urls.pop()
-            req = requests.get(url, headers=self.headers,cookies=self.cookies).text
+            req = requests.get(url, headers=self.headers,
+                               cookies=self.cookies).text
             new_data = json.loads(json.dumps(req))
             line = new_data
             # 处理json数据
@@ -88,7 +88,8 @@ class Pixiv():
         while len(self.picture) > 0:
             # 获取网页代码
             data = self.picture.pop()
-            pid = data.pid
+            image_data = data.get_info()
+            pid = image_data['pid']
             url = "https://www.pixiv.net/artworks/" + pid
             req = requests.get(url, headers=self.headers,
                                cookies=self.cookies).text
@@ -105,26 +106,66 @@ class Pixiv():
                         if meta['illust'][pid]["likeCount"] >= self.star_number:
                             data.set_info(meta['illust'][pid]['urls']['original'], meta['illust'][pid]["title"],
                                           meta['illust'][pid]["userName"], meta['illust'][pid]["likeCount"], )
-                            download_picture(data['url'][0], data['pid'])
+                            
+                            # download_picture(data['url'][0], data['pid'])
                             # 保存图片信息
                             self.result.append(data)
                             _count += 1
-        print(threading.current_thread().getName() + "共下载图片" + str(_count) + "张")
+        print(threading.current_thread().getName() + "共筛选出图片" + str(_count) + "张")
 
+    def download(self):
+        """
+        下载图片
+        :param line_number: 线程名
+        :return:
+        """
+        _count = 0
+        while len(self.result) > 0 :
+            image_data = self.result.pop()
+            image = image_data.get_info()
+            download_picture(image['url'][0], image['pid'])
+            _count += 1
+        print(threading.current_thread().getName() + "下载完成，共下载图片" + str(_count) + "张")
 
 if __name__ == "__main__":
-    thread_number = 2
+    thread_number = 3
     spider = Pixiv(search="冬", page=3, star_number=100)
     spider.get_urls()
     # 获取线程
     thread_lst = []
+
+
+    start =time.perf_counter()
     # 启动多个线程 获取图片ID
     for _ in range(thread_number):
         t = create_thread(spider.run_get_picture_url)
         thread_lst.append(t)
+    # 阻塞线程 等执行完后再去筛选图片
+    for thread_ in thread_lst:
+        thread_.join()
+    end = time.perf_counter()
+    print('run_get_picture_url Running time: %s Seconds'%(end-start))    
+
+    start =time.perf_counter()
+    # 获取合适图片用于下载
+    for _ in range(thread_number*2):
+        t = create_thread(spider.get_picture_info)
+        thread_lst.append(t)
     # 阻塞线程 等执行完后再去下载图片
     for thread_ in thread_lst:
         thread_.join()
-    # 获取合适图片 并下载
+    end = time.perf_counter()
+    print('get_picture_info Running time: %s Seconds'%(end-start))
+
+    start =time.perf_counter()
+    #下载图片
     for _ in range(thread_number):
-        create_thread(spider.get_picture_info)
+        t = create_thread(spider.download)
+        thread_lst.append(t)
+    # 阻塞线程 等执行完
+    for thread_ in thread_lst:
+        thread_.join()
+    end = time.perf_counter()
+    print('download Running time: %s Seconds'%(end-start))
+
+    print("退出主线程")

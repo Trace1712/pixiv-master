@@ -12,7 +12,7 @@ def download_picture(url, pid, suffix="jpg", path="..\\picture\\"):
     :param url: 图片地址
     :return:
     """
-    name = str(pid) + suffix
+    name = str(pid) +'.'+ suffix
     header = {'Referer': 'https://www.pixiv.net/'}
     req = requests.get(url, headers=header, stream=True)
     if req.status_code == 200:

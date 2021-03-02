@@ -1,4 +1,5 @@
-from pixiv.search import pixiv_search
+import sys
+from pixiv.search import PixivSearch
 from pixiv.recommand import pixiv_recommand
 from pixiv.daily import pixiv_daily
 
@@ -13,9 +14,10 @@ def cookies():
 
 
 def case1(cookie):
-    key = input('输入搜索关键词')
-    spider = pixiv_search(cookie=cookie, thread_number=3,
-                          search=key, page=3, star_number=100)
+    # key = input('输入搜索关键词')
+    key = "winter"
+    spider = PixivSearch(cookie=cookie, thread_number=3,
+                         search=key, page=3, star_number=100,use_proxy=False)
     spider.run()
 
 

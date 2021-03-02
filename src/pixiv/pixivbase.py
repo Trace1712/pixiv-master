@@ -1,15 +1,17 @@
+import sys
 from utils.image_data import ImageData
 import requests
 from bs4 import BeautifulSoup
 import json
-import utils.utils
+from utils.utils import *
 import time
 import threading
+import abc
+from utils.ippool import *
 
+class PixivBase(abc.ABC):
 
-class pixiv():
-
-    def __init__(self, cookie='', thread_number=3):
+    def __init__(self, cookie='', thread_number=3,use_proxy =False,start_number=50):
         self.cookie = cookie
         self.headers = {
             'X-Requested-With': 'XMLHttpRequest',
@@ -18,14 +20,20 @@ class pixiv():
         self.picture_id = []
         self.result = []
         self.thread_number = thread_number
+        # 是否使用代理IP
+        self.proxy = use_proxy
+        #
+        self.star_number = start_number
 
-    def set_picture_id(self, id):
-        """
-        设置图片ID
-        param id : 图片ID
-        :return
-        """
-        self.picture_id.append(ImageData(id))
+
+
+    @abc.abstractmethod
+    def run(self):
+        pass
+
+    @abc.abstractmethod
+    def get_urls(self):
+        pass
 
     def get_picture_info(self):
         """
@@ -33,14 +41,23 @@ class pixiv():
         :return:
         """
         _count = 0
+        if len(self.picture_id) == 0:
+            print("图片id列表中无内容\n")
         while len(self.picture_id) > 0:
             # 获取网页代码
             data = self.picture_id.pop()
             image_data = data.get_info()
             pid = image_data['pid']
             url = "https://www.pixiv.net/artworks/" + pid
-            req = requests.get(url, headers=self.headers,
-                               cookies=self.cookie).text
+            if not self.proxy:
+                req = requests.get(url, headers=self.headers, cookies=self.cookie).text
+            else:
+                ip = get_ip()
+                proxies = {
+                    'http': 'http://' + ip,
+                    # 'https': 'https://' + proxy
+                }
+                req = requests.get(url, headers=self.headers, cookies=self.cookie, proxies=proxies).text
             bs = BeautifulSoup(req, 'lxml')
             # 解析html
             for meta in bs.find_all("meta"):
@@ -61,17 +78,4 @@ class pixiv():
         print(threading.current_thread().getName() +
               "共筛选出图片" + str(_count) + "张")
 
-    def download(self):
-        """
-        下载图片
-        :param line_number: 线程名
-        :return:
-        """
-        _count = 0
-        while len(self.result) > 0:
-            image_data = self.result.pop()
-            image = image_data.get_info()
-            utils.utils.download_picture(image['url'][0], image['pid'])
-            _count += 1
-        print(threading.current_thread().getName() +
-              "下载完成，共下载图片" + str(_count) + "张")
+

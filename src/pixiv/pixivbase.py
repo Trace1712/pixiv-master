@@ -1,15 +1,15 @@
+import sys
 from utils.image_data import ImageData
 import requests
 from bs4 import BeautifulSoup
-import json
-import utils.utils
-import time
-import threading
+
+import abc
+from utils.utils import *
 
 
-class pixiv():
+class PixivBase(abc.ABC):
 
-    def __init__(self, cookie='', thread_number=3):
+    def __init__(self, cookie='', thread_number=3, use_proxy=False, start_number=50):
         self.cookie = cookie
         self.headers = {
             'X-Requested-With': 'XMLHttpRequest',
@@ -18,29 +18,35 @@ class pixiv():
         self.picture_id = []
         self.result = []
         self.thread_number = thread_number
+        # 是否使用代理IP
+        self.proxy = use_proxy
+        # ⭐
+        self.star_number = start_number
 
-    def set_picture_id(self, id):
-        """
-        设置图片ID
-        param id : 图片ID
-        :return
-        """
-        self.picture_id.append(ImageData(id))
+    @abc.abstractmethod
+    def run(self):
+        pass
 
-    def get_picture_info(self):
+    @abc.abstractmethod
+    def get_urls(self):
+        pass
+
+    def get_picture_info(self, picture_id):
         """
         获取图片 收藏数 浏览量
         :return:
         """
         _count = 0
-        while len(self.picture_id) > 0:
-            # 获取网页代码
-            data = self.picture_id.pop()
+        if len(picture_id) == 0:
+            print("图片id列表中无内容\n")
+        while len(picture_id) > 0:
+            # 获取单张图片ID
+            data = picture_id.pop()
             image_data = data.get_info()
             pid = image_data['pid']
+            # 获取网址
             url = "https://www.pixiv.net/artworks/" + pid
-            req = requests.get(url, headers=self.headers,
-                               cookies=self.cookie).text
+            req = request(self.headers, self.cookie, url, self.proxy)
             bs = BeautifulSoup(req, 'lxml')
             # 解析html
             for meta in bs.find_all("meta"):
@@ -58,20 +64,4 @@ class pixiv():
                             # 保存图片信息
                             self.result.append(data)
                             _count += 1
-        print(threading.current_thread().getName() +
-              "共筛选出图片" + str(_count) + "张")
-
-    def download(self):
-        """
-        下载图片
-        :param line_number: 线程名
-        :return:
-        """
-        _count = 0
-        while len(self.result) > 0:
-            image_data = self.result.pop()
-            image = image_data.get_info()
-            utils.utils.download_picture(image['url'][0], image['pid'])
-            _count += 1
-        print(threading.current_thread().getName() +
-              "下载完成，共下载图片" + str(_count) + "张")
+        print(threading.current_thread().getName() + "共筛选出图片" + str(_count) + "张")

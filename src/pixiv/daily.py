@@ -1,11 +1,12 @@
-from pixiv.pixiv import pixiv
+import sys
+from pixiv.pixivbase import *
 import threading
 import utils.utils
 import json
 import requests
 from bs4 import BeautifulSoup
 
-class pixiv_daily(pixiv):
+class pixiv_daily(PixivBase):
 
     def __init__(self, cookie='', thread_number=3, page=1):
         super().__init__(cookie, thread_number)

@@ -1,7 +1,7 @@
 import requests
 import threading
 import time
-from utils.ippool import *
+from utils.ippool import test_ip
 
 
 def download_picture(url, pid, suffix="jpg", path="..\\picture\\"):

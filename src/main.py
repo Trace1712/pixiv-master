@@ -2,7 +2,7 @@ import sys
 from pixiv.search import PixivSearch
 from pixiv.recommand import pixiv_recommand
 from pixiv.daily import pixiv_daily
-from src.utils.logger import *
+from utils.logger import Logger
 
 logger = Logger("hmk").get_log()
 

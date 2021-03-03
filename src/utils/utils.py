@@ -1,6 +1,7 @@
 import requests
 import threading
 import time
+from utils.ippool import *
 
 
 def download_picture(url, pid, suffix="jpg", path="..\\picture\\"):
@@ -80,3 +81,49 @@ def join_thread(thread_lst):
     """
     for thread_ in thread_lst:
         thread_.join()
+
+
+def get_ip():
+    """
+    获取代理IP
+    :return:
+    """
+    flag = 0
+    while True:
+        url = "http://webapi.http.zhimacangku.com/getip?num=1&type=1&pro=&city=0&yys=0&port=1&time=1&ts=0&ys=0&cs=0&lb=1&sb=0&pb=4&mr=1&regions="
+        req = requests.get(url)
+        if req.status_code == 200:
+            flag += 1
+            result = test_ip(req.text)
+            if result != "请求超时":
+                print("获取到可用IP")
+                return req.text
+            else:
+                print("IP无效,重新获取")
+        else:
+            print("请求IP失败,code为%s" % (str(req.status_code)))
+        if flag == 3:
+            print("失败次数过多无钱了,请联系客服QAQ")
+            break
+
+
+
+def request(headers, cookie, url, use_proxy):
+    """
+    封装请求函数
+    :param headers: 浏览头
+    :param cookie: cookie
+    :param url: url
+    :param use_proxy:是否用代理IP
+    :return:
+    """
+    if not use_proxy:
+        req = requests.get(url, headers=headers, cookies=cookie).text
+    else:
+        ip = get_ip()
+        proxies = {
+            'http': 'http://' + ip,
+            # 'https': 'https://' + proxy
+        }
+        req = requests.get(url, headers=headers, cookies=cookie, proxies=proxies).text
+    return req

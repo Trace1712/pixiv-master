@@ -2,7 +2,6 @@ import sys
 from pixiv.pixivbase import *
 import threading
 from utils.utils import *
-from utils.ippool import *
 import json
 import requests
 
@@ -18,7 +17,7 @@ class PixivSearch(PixivBase):
         :param page: 搜索页码数(默认为1)
         :param star_number: ♥数(默认为50)
         """
-        super().__init__(cookie, thread_number,use_proxy,star_number)
+        super().__init__(cookie, thread_number, use_proxy, star_number)
 
         self.search = search
         self.page = page
@@ -28,7 +27,6 @@ class PixivSearch(PixivBase):
         self.urls = []
         #
         self.picture_id = []
-
 
     def get_urls(self):
         """
@@ -88,14 +86,14 @@ class PixivSearch(PixivBase):
 
         # 获取合适图片用于下载
         for _ in range(self.thread_number * 2):
-            t = create_thread(self.get_picture_info)
+            t = create_thread(self.get_picture_info, self.picture_id)
         thread_lst.append(t)
         # 阻塞线程 等执行完后再去下载图片
         join_thread(thread_lst)
 
         # 下载图片
         for _ in range(self.thread_number):
-            t = create_thread(download,self.picture_id)
+            t = create_thread(download, self.result)
         thread_lst.append(t)
         # 阻塞线程 等执行完
         join_thread(thread_lst)

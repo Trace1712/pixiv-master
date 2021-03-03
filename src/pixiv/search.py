@@ -1,7 +1,8 @@
 import sys
-from pixiv.pixivbase import *
+from pixiv.pixivbase import PixivBase
 import threading
-from utils.utils import *
+from utils.utils import create_thread, replace_data, join_thread, download, get_ip
+from utils.image_data import ImageData
 import json
 import requests
 
@@ -48,14 +49,16 @@ class PixivSearch(PixivBase):
         while len(self.urls) > 0:
             url = self.urls.pop()
             if not self.proxy:
-                req = requests.get(url, headers=self.headers, cookies=self.cookie).text
+                req = requests.get(url, headers=self.headers,
+                                   cookies=self.cookie).text
             else:
                 ip = get_ip()
                 proxies = {
                     'http': 'http://' + ip,
                     # 'https': 'https://' + proxy
                 }
-                req = requests.get(url, headers=self.headers, cookies=self.cookie, proxies=proxies).text
+                req = requests.get(url, headers=self.headers,
+                                   cookies=self.cookie, proxies=proxies).text
             new_data = json.loads(json.dumps(req))
             # 处理json数据
             # 字符串转字典

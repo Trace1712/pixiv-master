@@ -1,10 +1,7 @@
-import sys
-from utils.image_data import ImageData
-import requests
 from bs4 import BeautifulSoup
-
 import abc
-from utils.utils import *
+from utils.utils import request
+import threading
 
 
 class PixivBase(abc.ABC):

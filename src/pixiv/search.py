@@ -1,7 +1,7 @@
 import sys
 from pixiv.pixivbase import PixivBase
 import threading
-from utils.utils import create_thread, replace_data, join_thread, download, get_ip
+from utils.utils import create_thread, replace_data, join_thread, download, get_ip,request
 from utils.image_data import ImageData
 import json
 import requests
@@ -34,7 +34,7 @@ class PixivSearch(PixivBase):
         获取所有目标URL
         :return:
         """
-        fmt = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}& s_mode = s_tag & ' \
+        fmt = 'https://www.pixiv.net/ajax/search/illustrations/{}?word={}&order=date_d&mode=all&p={}& s_mode = s_tag & ' \
               'type = all & lang = zh '
         urls = [fmt.format(self.search, self.search, p)
                 for p in range(1, self.page + 1)]
@@ -48,23 +48,14 @@ class PixivSearch(PixivBase):
         _count = 0
         while len(self.urls) > 0:
             url = self.urls.pop()
-            if not self.proxy:
-                req = requests.get(url, headers=self.headers,
-                                   cookies=self.cookie).text
-            else:
-                ip = get_ip()
-                proxies = {
-                    'http': 'http://' + ip,
-                    # 'https': 'https://' + proxy
-                }
-                req = requests.get(url, headers=self.headers,
-                                   cookies=self.cookie, proxies=proxies).text
+            req = request(self.headers, self.cookie, url, self.proxy)
             new_data = json.loads(json.dumps(req))
             # 处理json数据
             # 字符串转字典
             _dict = eval(replace_data(new_data))
             # 获取图片数据
-            info = _dict['body']['illustManga']['data']
+            # print(_dict)
+            info = _dict['body']['illust']['data']
 
             for cnt in info:
                 self.picture_id.append(ImageData(cnt['id']))

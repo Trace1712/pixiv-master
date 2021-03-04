@@ -2,7 +2,7 @@ import requests
 import threading
 import time
 from utils.ippool import test_ip
-
+import os
 
 def download_picture(url, pid, suffix="jpg", path="..\\picture\\"):
     """
@@ -16,6 +16,8 @@ def download_picture(url, pid, suffix="jpg", path="..\\picture\\"):
     name = str(pid) + '.' + suffix
     header = {'Referer': 'https://www.pixiv.net/'}
     req = requests.get(url, headers=header, stream=True)
+    if not os.path.exists(path):
+        os.mkdir(path)
     if req.status_code == 200:
         open(path + name, 'wb').write(req.content)  # 将内容写入图片
     else:
@@ -105,7 +107,6 @@ def get_ip():
         if flag == 3:
             print("失败次数过多无钱了,请联系客服QAQ")
             break
-
 
 
 def request(headers, cookie, url, use_proxy):

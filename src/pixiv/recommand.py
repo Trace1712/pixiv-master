@@ -1,7 +1,7 @@
 import sys
 from pixiv.pixivbase import PixivBase
 import threading
-from utils.utils import get_ip, download, replace_data, create_thread, join_thread
+from utils.util import get_ip, download, replace_data, create_thread, join_thread
 from utils.image_data import ImageData
 import json
 import requests

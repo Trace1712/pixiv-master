@@ -19,8 +19,8 @@ def cookies():
 def case1(cookie):
     # key = input('输入搜索关键词')
     key = "winter"
-    spider = PixivSearch(cookie=cookie, thread_number=3,
-                         search=key, page=3, star_number=100, use_proxy=False)
+    spider = PixivSearch(cookie=cookie, thread_number=1,
+                         search=key, page=1, star_number=1, use_proxy=False)
     spider.run()
 
 

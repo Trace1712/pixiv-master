@@ -1,11 +1,14 @@
 class ImageData():
 
-    def __init__(self, id):
+    def __init__(self, id, url="", title="", user_name="", tags=None):
+        if tags is None:
+            tags = []
         self.pid = id
-        self.url = '',
-        self.title = '',
-        self.user_name = '',
+        self.url = url,
+        self.title = title,
+        self.user_name = user_name,
         self.star_number = 0,
+        self.tags = tags
 
     def set_info(self, url, title, user_name, star_number):
         """

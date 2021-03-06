@@ -1,7 +1,7 @@
 import sys
 from pixiv.pixivbase import PixivBase
 import threading
-from utils.utils import create_thread, replace_data, join_thread, download, get_ip,request
+from utils.util import create_thread, replace_data, join_thread, download, get_ip,request
 from utils.image_data import ImageData
 import json
 import requests
@@ -54,11 +54,11 @@ class PixivSearch(PixivBase):
             # 字符串转字典
             _dict = eval(replace_data(new_data))
             # 获取图片数据
-            # print(_dict)
+            print(_dict)
             info = _dict['body']['illust']['data']
 
             for cnt in info:
-                self.picture_id.append(ImageData(cnt['id']))
+                self.picture_id.append(ImageData(id=cnt['id'],title=cnt["title"],user_name=cnt["userName"],tags=cnt["tags"]))
                 _count += 1
         print(threading.current_thread().getName() + "共找到图片" + str(_count) + "张")
 

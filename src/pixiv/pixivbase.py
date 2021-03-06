@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import abc
-from utils.utils import request
+from utils.util import request
 import threading
 
 
@@ -30,6 +30,7 @@ class PixivBase(abc.ABC):
 
     def get_picture_info(self, picture_id):
         """
+        picture_id:Image_data类型
         获取图片 收藏数 浏览量
         :return:
         """
@@ -40,7 +41,7 @@ class PixivBase(abc.ABC):
             # 获取单张图片ID
             data = picture_id.pop()
             image_data = data.get_info()
-            pid = image_data['pid']
+            pid = str(image_data['pid'])
             # 获取网址
             url = "https://www.pixiv.net/artworks/" + pid
             req = request(self.headers, self.cookie, url, self.proxy)

@@ -3,7 +3,9 @@ import threading
 import time
 from utils.ippool import test_ip
 import os
+from utils.logger import Logger
 
+logger = Logger("hmk").get_log()
 
 def download_picture(url, pid, path, suffix="jpg"):
     """
@@ -121,16 +123,19 @@ def request(headers, cookie, url, use_proxy):
     :param use_proxy:是否用代理IP
     :return:
     """
-    if not use_proxy:
-        req = requests.get(url, headers=headers, cookies=cookie).text
-    else:
-        ip = get_ip()
-        proxies = {
-            'http': 'http://' + ip,
-            # 'https': 'https://' + proxy
-        }
-        req = requests.get(url, headers=headers, cookies=cookie, proxies=proxies).text
-    return req
+    try:
+        if not use_proxy:
+            req = requests.get(url, headers=headers, cookies=cookie).text
+        else:
+            ip = get_ip()
+            proxies = {
+                'http': 'http://' + ip,
+                # 'https': 'https://' + proxy
+            }
+            req = requests.get(url, headers=headers, cookies=cookie, proxies=proxies).text
+        return req
+    except:
+        logger.info("网络错误")
 
 
 if __name__ == '__main__':

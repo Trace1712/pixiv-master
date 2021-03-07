@@ -52,18 +52,22 @@ class pixiv_daily(PixivBase):
             url = self.urls.pop(0)
             req = request(self.headers, self.cookie, url, self.proxy)
             bs = BeautifulSoup(req, 'lxml')
-            print(bs)
-            for meta in bs.find_all("a", attrs={"class": "work _work"}):
-                # self.picture_id.append("https://www.pixiv.net/" + str(meta["href"]))
+            for section in bs.find_all("section"):
                 _count += 1
+                # print(section.img)
                 # pid
-                pid = meta["href"][-8:]
+                pid = section["data-id"]
+                # title
+                title = section["data-title"]
+                # username
+                user_name = section["data-user-name"]
                 # tags
-                tags = meta.img["data-tags"]
-                # print(meta)
-                self.picture_id.append(ImageData(pid))
+                tags = section.img["data-tags"]
+                self.picture_id.append(ImageData(id=pid,title=title,user_name=user_name,tags=tags))
+
         # 取走就直接第二条
         while len(self.urls) > 0:
+
             url = self.urls.pop(0)
             req = request(self.headers, self.cookie, url, self.proxy)
             # 解析html
@@ -104,7 +108,7 @@ class pixiv_daily(PixivBase):
         # 阻塞线程 等执行完后再去下载图片
         join_thread(thread_lst)
         # 文件包+日期
-        path = "..\\..\\picture\\"+str(time.strftime("%Y%m%d", time.localtime())) +"\\"
+        path = "..\\..\\picture\\" + str(time.strftime("%Y%m%d", time.localtime())) + "\\"
         # 下载图片
         for _ in range(self.thread_number):
             t = create_thread(download, self.result, path)

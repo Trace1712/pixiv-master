@@ -19,6 +19,8 @@ class PixivBase(abc.ABC):
         self.proxy = use_proxy
         # ⭐
         self.star_number = start_number
+        self.ip = None
+
 
     @abc.abstractmethod
     def run(self):
@@ -44,7 +46,8 @@ class PixivBase(abc.ABC):
             pid = str(image_data['pid'])
             # 获取网址
             url = "https://www.pixiv.net/artworks/" + pid
-            req = request(self.headers, self.cookie, url, self.proxy)
+            req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
+            self.ip = ip
             bs = BeautifulSoup(req, 'lxml')
             # 解析html
             for meta in bs.find_all("meta"):

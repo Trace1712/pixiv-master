@@ -12,7 +12,7 @@ logger = Logger("hmk").get_log()
 
 
 def cookies():
-    with open("cookies.txt", 'r') as f:
+    with open("pixiv/cookies.txt", 'r') as f:
         _cookies = {}
         for row in f.read().split(';'):
             k, v = row.strip().split('=', 1)
@@ -34,7 +34,7 @@ def case2(cookie):
 
 
 def case3(cookie):
-    spider = pixiv_daily(cookie=cookie, thread_number=3, page=1)
+    spider = pixiv_daily(cookie=cookie, thread_number=1)
     spider.run()
 
 

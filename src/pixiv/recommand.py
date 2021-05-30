@@ -23,7 +23,8 @@ class pixiv_recommand(PixivBase):
         :return:
         """
         url = self.url
-        req = request(self.headers, self.cookie, url, self.proxy)
+        req,ip = request(self.headers, self.cookie, url, self.proxy,self.ip)
+        self.ip = ip
         new_data = json.loads(json.dumps(req))
         # 处理json数据
         # 字符串转字典

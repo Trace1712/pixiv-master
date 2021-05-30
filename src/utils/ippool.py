@@ -68,9 +68,8 @@ def test_ip(proxy):
                           'Chrome/56.0.2924.87 Safari/537.36'}
         url = 'https://www.pixiv.net/ajax/search/artworks/winter?word=winter&order=date_d&mode=all&p=10& ' \
               's_mode=s_tag&type=all&lang = zh '
-        # proxy = "201.174.173.122:999"
         proxies = {
-            'http': 'http://' + proxy,
+            'http': 'http://' + proxy.strip(),
             # 'https': 'https://' + proxy
         }
 
@@ -79,7 +78,7 @@ def test_ip(proxy):
             for row in f.read().split(';'):
                 k, v = row.strip().split('=', 1)
                 _cookies[k] = v
-        req = requests.get(url=url, headers=headers, cookies=_cookies, proxies=proxies).text
+        req = requests.get(url=url, headers=headers, cookies=_cookies, proxies=proxies,allow_redirects=False).text
         return req
     except:
         return "请求超时"

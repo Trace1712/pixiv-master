@@ -7,6 +7,7 @@ from utils.logger import Logger
 
 logger = Logger("hmk").get_log()
 
+
 def download_picture(url, pid, path, suffix="jpg"):
     """
     图片下载器
@@ -114,9 +115,10 @@ def get_ip():
             break
 
 
-def request(headers, cookie, url, use_proxy):
+def request(headers, cookie, url, use_proxy,ip = None):
     """
     封装请求函数
+    :param ip:
     :param headers: 浏览头
     :param cookie: cookie
     :param url: url
@@ -126,14 +128,15 @@ def request(headers, cookie, url, use_proxy):
     try:
         if not use_proxy:
             req = requests.get(url, headers=headers, cookies=cookie).text
+            ip = None
         else:
-            ip = get_ip()
+            ip = get_ip() if not ip else ip
             proxies = {
                 'http': 'http://' + ip,
-                # 'https': 'https://' + proxy
+                # 'https': 'https://' + ip
             }
-            req = requests.get(url, headers=headers, cookies=cookie, proxies=proxies).text
-        return req
+            req = requests.get(url, headers=headers, cookies=cookie, proxies=proxies, allow_redirects=False).text
+        return req, ip
     except:
         logger.info("网络错误")
 

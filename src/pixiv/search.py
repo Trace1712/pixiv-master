@@ -48,7 +48,8 @@ class PixivSearch(PixivBase):
         _count = 0
         while len(self.urls) > 0:
             url = self.urls.pop()
-            req = request(self.headers, self.cookie, url, self.proxy)
+            req,ip = request(self.headers, self.cookie, url, self.proxy,self.ip)
+            self.ip = ip
             new_data = json.loads(json.dumps(req))
             # 处理json数据
             # 字符串转字典

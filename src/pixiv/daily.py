@@ -12,7 +12,7 @@ import os
 
 class pixiv_daily(PixivBase):
 
-    def __init__(self, cookie=None, thread_number=3, num=49, use_proxy=False, ):
+    def __init__(self, cookie=None, thread_number=3, num=49, use_proxy=True, ):
         super().__init__(cookie, thread_number, use_proxy=use_proxy, start_number=0)
         if cookie is None:
             self.cookie = {}
@@ -20,7 +20,6 @@ class pixiv_daily(PixivBase):
             self.num = 50
         else:
             self.num = num
-
         # 网页URL
         self.urls = []
         # 全部url
@@ -50,7 +49,8 @@ class pixiv_daily(PixivBase):
         # 如果第一条数据还没被取走
         if len(self.urls) == self._len:
             url = self.urls.pop(0)
-            req = request(self.headers, self.cookie, url, self.proxy)
+            req, ip = request(self.headers, self.cookie, url, self.proxy,self.ip)
+            self.ip = ip
             bs = BeautifulSoup(req, 'lxml')
             for section in bs.find_all("section"):
                 _count += 1
@@ -63,13 +63,14 @@ class pixiv_daily(PixivBase):
                 user_name = section["data-user-name"]
                 # tags
                 tags = section.img["data-tags"]
-                self.picture_id.append(ImageData(id=pid,title=title,user_name=user_name,tags=tags))
+                self.picture_id.append(ImageData(id=pid, title=title, user_name=user_name, tags=tags))
 
         # 取走就直接第二条
         while len(self.urls) > 0:
 
             url = self.urls.pop(0)
-            req = request(self.headers, self.cookie, url, self.proxy)
+            req,ip = request(self.headers, self.cookie, url, self.proxy,self.ip)
+            self.ip = ip
             # 解析html
             new_data = json.loads(json.dumps(req))
             # 处理json数据
@@ -123,7 +124,18 @@ if __name__ == '__main__':
         for row in f.read().split(';'):
             k, v = row.strip().split('=', 1)
             _cookies[k] = v
-    spider = pixiv_daily(cookie=_cookies, thread_number=2, num=51)
-    # spider.get_urls()
-    # spider.run_get_picture_url()
-    spider.run()
+    print(_cookies)
+    # spider = pixiv_daily(cookie=_cookies, thread_number=1, num=51)
+    # # spider.get_urls()
+    # # spider.run_get_picture_url()
+    # spider.run()
+
+    url = "https://www.pixiv.net/ranking.php?mode=daily&content=illust"
+    cookie = _cookies
+    ip = "106.110.131.108:4217"
+    proxies = {
+        'http': 'http://' + ip,
+        # 'https': 'https://' + ip
+    }
+    req = requests.get(url, cookies=cookie, proxies=proxies, allow_redirects=False).text
+    # print(req)

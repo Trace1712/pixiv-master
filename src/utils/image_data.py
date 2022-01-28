@@ -1,9 +1,9 @@
-class ImageData():
+class ImageData:
 
-    def __init__(self, id, url="", title="", user_name="", tags=None):
+    def __init__(self, pid, url="", title="", user_name="", tags=None):
         if tags is None:
             tags = []
-        self.pid = id
+        self.pid = pid
         self.url = url,
         self.title = title,
         self.user_name = user_name,

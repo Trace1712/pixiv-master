@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import abc
-from utils.util import request
+from download_util import request
 import threading
 
 
@@ -20,7 +20,6 @@ class PixivBase(abc.ABC):
         # ⭐
         self.star_number = start_number
         self.ip = None
-
 
     @abc.abstractmethod
     def run(self):

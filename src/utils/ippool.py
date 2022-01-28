@@ -59,6 +59,30 @@ def limit_decor(limit_time):
     return functions
 
 
+def get_ip():
+    """
+    获取代理IP
+    :return:
+    """
+    flag = 0
+    while True:
+        url = "http://webapi.http.zhimacangku.com/getip?num=1&type=1&pro=&city=0&yys=0&port=1&time=1&ts=0&ys=0&cs=0&lb=1&sb=0&pb=4&mr=1&regions="
+        req = requests.get(url)
+        if req.status_code == 200:
+            flag += 1
+            result = test_ip(req.text)
+            if result != "请求超时":
+                print("获取到可用IP")
+                return req.text
+            else:
+                print("IP无效,重新获取")
+        else:
+            print("请求IP失败,code为%s" % (str(req.status_code)))
+        if flag == 3:
+            print("失败次数过多无钱了,请联系客服QAQ")
+            break
+
+
 @limit_decor(10)
 def test_ip(proxy):
     try:
@@ -78,9 +102,7 @@ def test_ip(proxy):
             for row in f.read().split(';'):
                 k, v = row.strip().split('=', 1)
                 _cookies[k] = v
-        req = requests.get(url=url, headers=headers, cookies=_cookies, proxies=proxies,allow_redirects=False).text
+        req = requests.get(url=url, headers=headers, cookies=_cookies, proxies=proxies, allow_redirects=False).text
         return req
     except:
         return "请求超时"
-
-

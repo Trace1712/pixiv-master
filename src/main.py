@@ -1,10 +1,9 @@
 import sys
 from pixiv.search import PixivSearch
-from pixiv.recommand import pixiv_recommand
-from pixiv.daily import pixiv_daily
+from pixiv.recommand import PixivRecommend
+from pixiv.daily import PixivDaily
 from utils.logger import Logger
-from utils.util import create_thread
-import schedule
+from concurrent.futures import ThreadPoolExecutor
 import time
 import datetime
 
@@ -20,51 +19,36 @@ def cookies():
         return _cookies
 
 
-def case1(cookie):
+def case1():
     # key = input('输入搜索关键词')
     key = "winter"
-    spider = PixivSearch(cookie=cookie, thread_number=1,
-                         search=key, page=1, star_number=1, use_proxy=False)
-    spider.run()
+    search_spider.set_search(key)
+    search_spider.run()
 
 
-def case2(cookie):
-    spider = pixiv_recommand(cookie=cookie, thread_number=3)
-    spider.run()
+def case2():
+    recommend_spider.run()
 
 
-def case3(cookie):
-    spider = pixiv_daily(cookie=cookie, thread_number=1)
-    spider.run()
+def case3():
+    daily_spider.run()
 
-
-def job4():
-    print('Job4:每天下午17:49执行一次，每次执行20秒')
-    print('Job4-startTime:%s' % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-    time.sleep(20)
-    print('Job4-endTime:%s' % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-    print('------------------------------------------------------------------------')
-
-
-def job1():
-    print('Job1:每隔10秒执行一次的任务，每次执行2秒')
-    print('Job1-startTime:%s' % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-    time.sleep(2)
-    print('Job1-endTime:%s' % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-    print('------------------------------------------------------------------------')
-
-
-def dingshi():
-    schedule.every().day.at('12:00').do(job4)
-    # schedule.every(10).seconds.do(job1)
-    while True:
-        schedule.run_pending()
 
 if __name__ == "__main__":
     cookie = cookies()
-    create_thread(dingshi)
-    while True:
+    threadlocal = ThreadPoolExecutor(max_workers=4, thread_name_prefix='search')
 
+    # 搜索图片
+    search_spider = PixivSearch(cookie=cookie, thread_number=1,
+                                search="", page=1, star_number=1, use_proxy=False)
+
+    # 推荐图片
+    recommend_spider = PixivRecommend(cookie=cookie, thread_number=3)
+
+    # 日常爬虫
+    daily_spider = PixivDaily(cookie=cookie, thread_number=1)
+
+    while True:
         print('选择功能')
         print('1.搜索图片')
         print('2.获取推荐图片')

@@ -1,14 +1,10 @@
-import sys
-from pixiv.pixivbase import PixivBase
-import threading
-from utils.util import get_ip, download, replace_data, create_thread, join_thread,request
-from utils.image_data import ImageData
+from pixivbase import PixivBase
+from download_util import  download, replace_data, create_thread, join_thread, request
+from image_data import ImageData
 import json
-import requests
-from bs4 import BeautifulSoup
 
 
-class pixiv_recommand(PixivBase):
+class PixivRecommend(PixivBase):
 
     def __init__(self, cookie='', thread_number=3):
         super().__init__(cookie, thread_number)
@@ -23,7 +19,7 @@ class pixiv_recommand(PixivBase):
         :return:
         """
         url = self.url
-        req,ip = request(self.headers, self.cookie, url, self.proxy,self.ip)
+        req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
         self.ip = ip
         new_data = json.loads(json.dumps(req))
         # 处理json数据

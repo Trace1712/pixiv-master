@@ -1,15 +1,15 @@
 import sys
-from pixiv.pixivbase import PixivBase
+from pixivbase import PixivBase
 import threading
-from utils.util import create_thread, replace_data, join_thread, download, get_ip,request
-from utils.image_data import ImageData
+from download_util import create_thread, replace_data, join_thread, download, request
+from image_data import ImageData
 import json
 import requests
 
 
 class PixivSearch(PixivBase):
 
-    def __init__(self, cookie='', thread_number=3, search='', page=1, star_number=50, use_proxy=False):
+    def __init__(self, cookie='', thread_number=3, search='', page=1, star_number=50, use_proxy=False, threadlocal=None):
         """
         根据关键词搜索图片
         :param cookie: cookie
@@ -26,8 +26,10 @@ class PixivSearch(PixivBase):
         self.star_number = star_number
         # 网页URL
         self.urls = []
-        #
+        # 图片ID
         self.picture_id = []
+
+        self.threadlocal = threadlocal
 
     def get_urls(self):
         """
@@ -48,7 +50,7 @@ class PixivSearch(PixivBase):
         _count = 0
         while len(self.urls) > 0:
             url = self.urls.pop()
-            req,ip = request(self.headers, self.cookie, url, self.proxy,self.ip)
+            req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
             self.ip = ip
             new_data = json.loads(json.dumps(req))
             # 处理json数据
@@ -59,9 +61,13 @@ class PixivSearch(PixivBase):
             info = _dict['body']['illust']['data']
 
             for cnt in info:
-                self.picture_id.append(ImageData(id=cnt['id'],title=cnt["title"],user_name=cnt["userName"],tags=cnt["tags"]))
+                self.picture_id.append(
+                    ImageData(pid=cnt['id'], title=cnt["title"], user_name=cnt["userName"], tags=cnt["tags"]))
                 _count += 1
         print(threading.current_thread().getName() + "共找到图片" + str(_count) + "张")
+
+    def set_search(self, key):
+        self.search = key
 
     def run(self):
         """

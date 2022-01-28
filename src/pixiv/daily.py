@@ -1,8 +1,8 @@
 import sys
-from pixiv.pixivbase import PixivBase
+from pixivbase import PixivBase
 import threading
-from utils.util import create_thread, join_thread, get_ip, replace_data, download, request
-from utils.image_data import ImageData
+from download_util import create_thread, join_thread, replace_data, download, request
+from image_data import ImageData
 import json
 import requests
 from bs4 import BeautifulSoup
@@ -10,7 +10,7 @@ import time
 import os
 
 
-class pixiv_daily(PixivBase):
+class PixivDaily(PixivBase):
 
     def __init__(self, cookie=None, thread_number=3, num=49, use_proxy=True, ):
         super().__init__(cookie, thread_number, use_proxy=use_proxy, start_number=0)
@@ -49,7 +49,7 @@ class pixiv_daily(PixivBase):
         # 如果第一条数据还没被取走
         if len(self.urls) == self._len:
             url = self.urls.pop(0)
-            req, ip = request(self.headers, self.cookie, url, self.proxy,self.ip)
+            req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
             self.ip = ip
             bs = BeautifulSoup(req, 'lxml')
             for section in bs.find_all("section"):
@@ -63,13 +63,13 @@ class pixiv_daily(PixivBase):
                 user_name = section["data-user-name"]
                 # tags
                 tags = section.img["data-tags"]
-                self.picture_id.append(ImageData(id=pid, title=title, user_name=user_name, tags=tags))
+                self.picture_id.append(ImageData(pid=pid, title=title, user_name=user_name, tags=tags))
 
         # 取走就直接第二条
         while len(self.urls) > 0:
 
             url = self.urls.pop(0)
-            req,ip = request(self.headers, self.cookie, url, self.proxy,self.ip)
+            req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
             self.ip = ip
             # 解析html
             new_data = json.loads(json.dumps(req))
@@ -138,4 +138,3 @@ if __name__ == '__main__':
         # 'https': 'https://' + ip
     }
     req = requests.get(url, cookies=cookie, proxies=proxies, allow_redirects=False).text
-    # print(req)

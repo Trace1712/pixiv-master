@@ -1,8 +1,8 @@
 import sys
 from pixivbase import PixivBase
 import threading
-from download_util import create_thread, join_thread, replace_data, download, request
-from image_data import ImageData
+from download import create_thread, join_thread, replace_data, download, request
+from src.entity.image_data import ImageData
 import json
 import requests
 from bs4 import BeautifulSoup

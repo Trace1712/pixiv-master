@@ -6,6 +6,7 @@ from utils.logger import Logger
 from concurrent.futures import ThreadPoolExecutor
 import time
 import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 logger = Logger("hmk").get_log()
 
@@ -47,6 +48,8 @@ if __name__ == "__main__":
 
     # 日常爬虫
     daily_spider = PixivDaily(cookie=cookie, thread_number=1)
+
+    threadPool = ThreadPoolExecutor(max_workers=10, thread_name_prefix="pixiv")
 
     while True:
         print('选择功能')

@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import abc
-from download_util import request
+from download import request
 import threading
 
 
@@ -22,7 +22,7 @@ class PixivBase(abc.ABC):
         self.ip = None
 
     @abc.abstractmethod
-    def run(self):
+    def run(self, thread_pool):
         pass
 
     @abc.abstractmethod
@@ -36,32 +36,29 @@ class PixivBase(abc.ABC):
         :return:
         """
         _count = 0
-        if len(picture_id) == 0:
-            print("图片id列表中无内容\n")
-        while len(picture_id) > 0:
-            # 获取单张图片ID
-            data = picture_id.pop()
-            image_data = data.get_info()
-            pid = str(image_data['pid'])
-            # 获取网址
-            url = "https://www.pixiv.net/artworks/" + pid
-            req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
-            self.ip = ip
-            bs = BeautifulSoup(req, 'lxml')
-            # 解析html
-            for meta in bs.find_all("meta"):
-                if len(meta['content']) > 0 and meta['content'][0] == "{":
-                    # 处理json数据
-                    meta = eval(
-                        meta['content'].replace("false", "'false'").replace("null", "'null'").replace("true",
-                                                                                                      "'true'"))
-                    if 'illust' in meta:
-                        # 判断图片是否满足点赞数量的条件
-                        if meta['illust'][pid]["likeCount"] >= self.star_number:
-                            data.set_info(meta['illust'][pid]['urls']['original'], meta['illust'][pid]["title"],
-                                          meta['illust'][pid]["userName"], meta['illust'][pid]["likeCount"], )
 
-                            # 保存图片信息
-                            self.result.append(data)
-                            _count += 1
+        # 获取单张图片ID
+        image_data = picture_id.get_info()
+        pid = str(image_data['pid'])
+        # 获取网址
+        url = "https://www.pixiv.net/artworks/" + pid
+        req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
+        self.ip = ip
+        bs = BeautifulSoup(req, 'lxml')
+        # 解析html
+        for meta in bs.find_all("meta"):
+            if len(meta['content']) > 0 and meta['content'][0] == "{":
+                # 处理json数据
+                meta = eval(
+                    meta['content'].replace("false", "'false'").replace("null", "'null'").replace("true",
+                                                                                                  "'true'"))
+                if 'illust' in meta:
+                    # 判断图片是否满足点赞数量的条件
+                    if meta['illust'][pid]["likeCount"] >= self.star_number:
+                        picture_id.set_info(meta['illust'][pid]['urls']['original'], meta['illust'][pid]["title"],
+                                            meta['illust'][pid]["userName"], meta['illust'][pid]["likeCount"], )
+
+                        # 保存图片信息
+                        self.result.append(picture_id)
+                        _count += 1
         print(threading.current_thread().getName() + "共筛选出图片" + str(_count) + "张")

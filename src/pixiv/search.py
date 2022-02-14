@@ -1,17 +1,14 @@
 import sys
 from pixivbase import PixivBase
-import threading
-from download import create_thread, replace_data, join_thread, download, request
-from src.entity.image_data import ImageData
+from download import *
 import json
-import requests
-
+from src.entity.image_data import ImageData
 from thread_factory import *
 
 
 class PixivSearch(PixivBase):
 
-    def __init__(self, cookie='', thread_number=3, search='', page=1, star_number=50, use_proxy=False, threadlocal=None):
+    def __init__(self, cookie='', thread_number=3, search='', page=1, star_number=50, use_proxy=False):
         """
         根据关键词搜索图片
         :param cookie: cookie
@@ -30,10 +27,13 @@ class PixivSearch(PixivBase):
         self.urls = []
         # 图片ID
         self.picture_id = []
-
-        self.condition = threading.Condition()  # 创建条件对象
-
+        # 创建条件对象
+        self.condition = threading.Condition()
+        # 是否完成任务
         self.finish = False
+
+    def set_search(self, key):
+        self.search = key
 
     def get_urls(self):
         """
@@ -52,9 +52,8 @@ class PixivSearch(PixivBase):
         :return:
         """
         while len(self.urls) > 0:
-            url = self.urls.pop()
-            producer_run(self.condition, 100, '搜索生产者-' + str(num + 1), self.run_get_picture_url, url)
-
+            producer_run(self.condition, 100, 'producer_search-{}'.format(str(num + 1)),
+                         self.run_get_picture_url, self.urls.pop())
         self.finish = True
 
     def run_get_picture_url(self, url):
@@ -63,10 +62,8 @@ class PixivSearch(PixivBase):
         self.ip = ip
         new_data = json.loads(json.dumps(req))
         # 处理json数据
-        # 字符串转字典
         _dict = eval(replace_data(new_data))
         # 获取图片数据
-        # print(_dict)
         info = _dict['body']['illust']['data']
 
         for cnt in info:
@@ -74,52 +71,53 @@ class PixivSearch(PixivBase):
                 picture_id=ImageData(pid=cnt['id'], title=cnt["title"], user_name=cnt["userName"], tags=cnt["tags"]))
             _count += 1
 
-        print(threading.current_thread().getName() + "共找到图片" + str(_count) + "张")
+        logger.info("{} finds {} pictures".format(threading.current_thread().getName(), _count))
 
-    def run_get_picture_info_consumer(self, num):
+    def run_download_picture_consumer(self, num):
+        """
+        下载图片 消费者
+        :param num: 线程号
+        :return:
+        """
         while True:
-            consumer_run(self.condition, '图片下载器-' + str(num + 1), download, self.result)
+            consumer_run(self.condition, 'picture_download-{}'.format(num + 1),  download, self.result)
             if self.finish:
                 break
 
-    def set_search(self, key):
-        self.search = key
-
-    def run(self,thread_pool):
+    def run(self, thread_pool):
         """
-        运行搜索功能
+        启动
         :return:
         """
         self.get_urls()
         self.finish = False
         for i in range(0, 2):
-            thread_pool.submit(self.run_get_picture_url, i)
+            thread_pool.submit(self.run_get_picture_url_producer, i)
 
-        for i in range(0, 4):
-            thread_pool.submit(self.run_get_picture_info_consumer, i)
+        for i in range(0, 2):
+            thread_pool.submit(self.run_download_picture_consumer, i)
 
 
+if __name__ == '__main__':
+    def cookies():
+        with open("cookies.txt", 'r') as f:
+            _cookies = {}
+            for row in f.read().split(';'):
+                k, v = row.strip().split('=', 1)
+                _cookies[k] = v
+            return _cookies
+    import requests
+    cookies = cookies()
+    url = 'https://www.pixiv.net/ajax/search/artworks/winter?word=winter&order=date_d&mode=all&p=1&s_mode=s_tag&type=all&lang=zh'
 
-        # # 获取线程
-        # thread_lst = []
-        #
-        # # 启动多个线程 获取图片ID
-        # for _ in range(self.thread_number):
-        #     t = create_thread(self.run_get_picture_url)
-        #     thread_lst.append(t)
-        # # 阻塞线程 等执行完后再去筛选图片
-        # join_thread(thread_lst)
-
-        # 获取合适图片用于下载
-        # for _ in range(self.thread_number * 2):
-        #     t = create_thread(self.get_picture_info, self.picture_id)
-        # thread_lst.append(t)
-        # # 阻塞线程 等执行完后再去下载图片
-        # join_thread(thread_lst)
-
-        # # 下载图片
-        # for _ in range(self.thread_number):
-        #     t = create_thread(download, self.result)
-        # thread_lst.append(t)
-        # # 阻塞线程 等执行完
-        # join_thread(thread_lst)
+    # url = "www.baidu.com"
+    headers = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/56.0.2924.87 Safari/537.36'}
+    proxies = {
+        'http': 'http://127.0.0.1:7890',
+        'https': 'https://127.0.0.1:7890'
+    }
+    req = requests.get(url, headers=headers, cookies=cookies, proxies=proxies, allow_redirects=False)
+    print(req.status_code)

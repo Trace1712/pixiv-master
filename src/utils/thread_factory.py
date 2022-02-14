@@ -2,8 +2,7 @@ import threading  # 导入多线程模块
 import time  # 导入时间模块
 import random  # 导入随机模块
 
-# count = 0  # 使用共享区模拟变量
-# condition = threading.Condition()  # 创建条件对象
+count = 0  # 使用共享区模拟变量
 
 
 def producer_run(condition, num, thread_name, func, param):

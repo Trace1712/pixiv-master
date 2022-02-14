@@ -23,9 +23,9 @@ def download_picture(url, pid, path, suffix="jpg"):
         os.mkdir(path)
     if req.status_code == 200:
         open(path + name, 'wb').write(req.content)  # 将内容写入图片
-        print(name + "下载完成")
+        logger.info("{} download success".format(name))
     else:
-        print(name + "下载失败")
+        logger.info("{} download fail".format(name))
     del req
 
 
@@ -42,8 +42,7 @@ def download(picture, path="..\\..\\picture\\"):
         image = image_data.get_info()
         download_picture(image['url'][0], image['pid'], path)
         _count += 1
-    print(threading.current_thread().getName() +
-          "下载完成，共下载图片" + str(_count) + "张")
+    logger.info("{} download finish, downloaded {} pictures".format(threading.current_thread().getName(), _count))
 
 
 def create_thread(function, *args):
@@ -61,7 +60,7 @@ def create_thread(function, *args):
         for arg in args:
             result.append(arg)
         t = threading.Thread(target=function, args=tuple(result))
-    print(threading.current_thread().getName() + "正在执行" + str(function.__name__))
+    logger.info("{} is runnning function {}".format(threading.current_thread().getName(), function.__name__))
     t.start()
     return t
 

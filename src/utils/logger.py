@@ -6,7 +6,6 @@ import os
 
 
 log_path = os.path.dirname(os.getcwd())
-print(log_path)
 
 
 class Logger:

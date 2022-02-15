@@ -25,8 +25,10 @@ class PixivSearch(PixivBase):
         self.star_number = star_number
         # 网页URL
         self.urls = []
+        # info
+        self.info = []
         # 图片ID
-        self.picture_id = []
+        # self.picture_id = []
         # 创建条件对象
         self.condition = threading.Condition()
         # 是否完成任务
@@ -46,43 +48,22 @@ class PixivSearch(PixivBase):
                 for p in range(1, self.page + 1)]
         self.urls = urls
 
-    def run_get_picture_url_producer(self, num):
+    def run_get_picture_info_producer(self, cnt):
         """
         获取全部图片URL
+        :param cnt: info
         :return:
         """
-        while len(self.urls) > 0:
-            producer_run(self.condition, 100, 'producer_search-{}'.format(str(num + 1)),
-                         self.run_get_picture_url, self.urls.pop())
-        self.finish = True
+        producer_run(self.condition, 100, 'producer-{}'.format(cnt["id"]), self.get_picture_info,
+                     ImageData(pid=cnt['id'], title=cnt["title"], user_name=cnt["userName"], tags=cnt["tags"]))
 
-    def run_get_picture_url(self, url):
-        _count = 0
-        req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
-        self.ip = ip
-        new_data = json.loads(json.dumps(req))
-        # 处理json数据
-        _dict = eval(replace_data(new_data))
-        # 获取图片数据
-        info = _dict['body']['illust']['data']
-
-        for cnt in info:
-            self.get_picture_info(
-                picture_id=ImageData(pid=cnt['id'], title=cnt["title"], user_name=cnt["userName"], tags=cnt["tags"]))
-            _count += 1
-
-        logger.info("{} finds {} pictures".format(threading.current_thread().getName(), _count))
-
-    def run_download_picture_consumer(self, num):
+    def run_download_picture_consumer(self, image):
         """
         下载图片 消费者
-        :param num: 线程号
+        :param image: 图片信息
         :return:
         """
-        while True:
-            consumer_run(self.condition, 'picture_download-{}'.format(num + 1),  download, self.result)
-            if self.finish:
-                break
+        consumer_run(self.condition, 'consumer-download-{}'.format(image['pid']), download, image)
 
     def run(self, thread_pool):
         """
@@ -91,11 +72,24 @@ class PixivSearch(PixivBase):
         """
         self.get_urls()
         self.finish = False
-        for i in range(0, 2):
-            thread_pool.submit(self.run_get_picture_url_producer, i)
+        """
+        页数请求少，单线程就行
+        """
+        while len(self.urls) > 0:
+            url = self.urls.pop()
+            req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
+            self.ip = ip
+            # 处理json数据
+            _dict = eval(replace_data(json.loads(json.dumps(req))))
+            # 获取图片数据
+            self.info = self.info + _dict['body']['illust']['data']
+            logger.info("get picture success {}", url)
 
-        for i in range(0, 2):
-            thread_pool.submit(self.run_download_picture_consumer, i)
+        for cnt in self.info:
+            thread_pool.submit(self.run_get_picture_info_producer, cnt)
+
+        for picture in self.result:
+            thread_pool.submit(self.run_download_picture_consumer, picture)
 
 
 if __name__ == '__main__':
@@ -106,7 +100,10 @@ if __name__ == '__main__':
                 k, v = row.strip().split('=', 1)
                 _cookies[k] = v
             return _cookies
+
+
     import requests
+
     cookies = cookies()
     url = 'https://www.pixiv.net/ajax/search/artworks/winter?word=winter&order=date_d&mode=all&p=1&s_mode=s_tag&type=all&lang=zh'
 

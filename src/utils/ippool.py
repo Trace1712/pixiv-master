@@ -52,7 +52,7 @@ def limit_decor(limit_time):
             if thre_func.get_result():
                 return thre_func.get_result()
             else:
-                return "请求超时"  # 超时返回  可以自定义
+                return "request time out"  # 超时返回  可以自定义
 
         return run
 
@@ -105,4 +105,4 @@ def test_ip(proxy):
         req = requests.get(url=url, headers=headers, cookies=_cookies, proxies=proxies, allow_redirects=False).text
         return req
     except:
-        return "请求超时"
+        return "request time out"

@@ -36,13 +36,11 @@ def download(picture, path="..\\..\\picture\\"):
     :param picture: 图片列表
     :return:
     """
-    _count = 0
-    while len(picture) > 0:
-        image_data = picture.pop()
-        image = image_data.get_info()
-        download_picture(image['url'][0], image['pid'], path)
-        _count += 1
-    logger.info("{} download finish, downloaded {} pictures".format(threading.current_thread().getName(), _count))
+    image_data = picture
+    image = image_data.get_info()
+    download_picture(image['url'][0], image['pid'], path)
+
+    logger.info("download finish {}".format(image['pid']))
 
 
 def create_thread(function, *args):
@@ -112,7 +110,7 @@ def request(headers, cookie, url, use_proxy, ip=None):
             req = requests.get(url, headers=headers, cookies=cookie, proxies=proxies, allow_redirects=False).text
         return req, ip
     except:
-        logger.info("网络错误")
+        logger.info("network error, req failed")
 
 
 if __name__ == '__main__':

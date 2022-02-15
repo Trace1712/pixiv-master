@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import abc
-from download import request
+from download import *
 import threading
 
 
@@ -38,20 +38,17 @@ class PixivBase(abc.ABC):
         _count = 0
 
         # 获取单张图片ID
-        image_data = picture_id.get_info()
-        pid = str(image_data['pid'])
+        pid = str(picture_id.get_info()['pid'])
         # 获取网址
-        url = "https://www.pixiv.net/artworks/" + pid
-        req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
-        self.ip = ip
+        url = "https://www.pixiv.net/artworks/{}".format(pid)
+        req, self.ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
         bs = BeautifulSoup(req, 'lxml')
         # 解析html
         for meta in bs.find_all("meta"):
             if len(meta['content']) > 0 and meta['content'][0] == "{":
                 # 处理json数据
                 meta = eval(
-                    meta['content'].replace("false", "'false'").replace("null", "'null'").replace("true",
-                                                                                                  "'true'"))
+                    meta['content'].replace("false", "'false'").replace("null", "'null'").replace("true","'true'"))
                 if 'illust' in meta:
                     # 判断图片是否满足点赞数量的条件
                     if meta['illust'][pid]["likeCount"] >= self.star_number:
@@ -61,4 +58,4 @@ class PixivBase(abc.ABC):
                         # 保存图片信息
                         self.result.append(picture_id)
                         _count += 1
-        print(threading.current_thread().getName() + "共筛选出图片" + str(_count) + "张")
+        logger.info("{} got {} pictures".format(threading.current_thread().getName(), _count))

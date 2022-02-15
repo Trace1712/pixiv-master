@@ -1,5 +1,4 @@
 from pixiv.search import PixivSearch
-from utils.logger import Logger
 from concurrent.futures import ThreadPoolExecutor
 
 def cookies():
@@ -28,7 +27,7 @@ def case1():
 
 if __name__ == "__main__":
     cookie = cookies()
-    threadlocal = ThreadPoolExecutor(max_workers=8, thread_name_prefix='search')
+    threadlocal = ThreadPoolExecutor(max_workers=10, thread_name_prefix='search')
 
     # 搜索图片
     search_spider = PixivSearch(cookie=cookie, thread_number=1,

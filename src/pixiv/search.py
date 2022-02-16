@@ -55,7 +55,10 @@ class PixivSearch(PixivBase):
         :return:
         """
         producer_run(self.condition, 100, 'producer-{}'.format(cnt["id"]), self.get_picture_info,
-                     ImageData(pid=cnt['id'], title=cnt["title"], user_name=cnt["userName"], tags=cnt["tags"]))
+                     ImageData(pid=cnt['id'], title=cnt["title"], user_name=cnt["userName"], tags=cnt["tags"],
+                               user_id=cnt["userId"], description=cnt["description"], width=cnt["width"], height=cnt["height"],
+                               create_date=cnt["createDate"]
+                               ))
 
     def run_download_picture_consumer(self, image):
         """
@@ -83,7 +86,7 @@ class PixivSearch(PixivBase):
             _dict = eval(replace_data(json.loads(json.dumps(req))))
             # 获取图片数据
             self.info = self.info + _dict['body']['illust']['data']
-            logger.info("get picture success {}", url)
+            logger.info("get picture success {}".format(url))
 
         for cnt in self.info:
             thread_pool.submit(self.run_get_picture_info_producer, cnt)

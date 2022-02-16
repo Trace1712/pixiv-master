@@ -42,7 +42,10 @@ class PixivBase(abc.ABC):
         # 获取网址
         url = "https://www.pixiv.net/artworks/{}".format(pid)
         req, self.ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
-        bs = BeautifulSoup(req, 'lxml')
+        try:
+            bs = BeautifulSoup(req, 'lxml')
+        except Exception as e:
+            logger.error(e)
         # 解析html
         for meta in bs.find_all("meta"):
             if len(meta['content']) > 0 and meta['content'][0] == "{":

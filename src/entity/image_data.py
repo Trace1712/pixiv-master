@@ -1,6 +1,7 @@
 class ImageData:
 
-    def __init__(self, pid, url="", title="", user_name="", tags=None):
+    def __init__(self, pid, url="", title="", user_name="", user_id="", description="", width=0, height=0,
+                 create_date="", tags=None):
         if tags is None:
             tags = []
         self.pid = pid
@@ -9,6 +10,11 @@ class ImageData:
         self.user_name = user_name,
         self.star_number = 0,
         self.tags = tags
+        self.user_id = user_id
+        self.description = description
+        self.width = width
+        self.height = height
+        self.createDate = create_date
 
     def set_info(self, url, title, user_name, star_number):
         """

@@ -1,4 +1,3 @@
-import sys
 from pixivbase import PixivBase
 import threading
 from download import create_thread, join_thread, replace_data, download, request
@@ -7,23 +6,22 @@ import json
 import requests
 from bs4 import BeautifulSoup
 import time
-import os
 
 
 class PixivDaily(PixivBase):
 
-    def __init__(self, cookie=None, thread_number=3, num=49, use_proxy=True, ):
-        super().__init__(cookie, thread_number, use_proxy=use_proxy, start_number=0)
-        if cookie is None:
-            self.cookie = {}
-        if num < 50:
-            self.num = 50
-        else:
-            self.num = num
+    def __init__(self, cookie=None, num=49, use_proxy=True):
+        super().__init__(cookie, use_proxy=use_proxy, start_number=0)
+
+        self.cookie = {} if not cookie else cookie
+        self.num = 50 if num < 50 else num
         # 网页URL
         self.urls = []
         # 全部url
         self._len = 0
+
+    def set_num(self, num):
+        self.num = num
 
     def get_urls(self):
         """
@@ -83,39 +81,12 @@ class PixivDaily(PixivBase):
 
         print(threading.current_thread().getName() + "共找到图片" + str(_count) + "张")
 
-    def run(self):
+    def run(self, threadPool, num):
         """
         运行搜索功能
         :return:
         """
         self.get_urls()
-        # 获取线程
-        thread_lst = []
-
-        # 限制线程数
-        if self.thread_number > len(self.urls):
-            self.thread_number = len(self.urls)
-        # 启动多个线程 获取图片ID
-        for _ in range(self.thread_number):
-            t = create_thread(self.run_get_picture_url)
-            thread_lst.append(t)
-        # 阻塞线程 等执行完后再去筛选图片
-        join_thread(thread_lst)
-
-        # 获取合适图片用于下载
-        for _ in range(self.thread_number * 3):
-            t = create_thread(self.get_picture_info, self.picture_id)
-        thread_lst.append(t)
-        # 阻塞线程 等执行完后再去下载图片
-        join_thread(thread_lst)
-        # 文件包+日期
-        path = "..\\..\\picture\\" + str(time.strftime("%Y%m%d", time.localtime())) + "\\"
-        # 下载图片
-        for _ in range(self.thread_number):
-            t = create_thread(download, self.result, path)
-        thread_lst.append(t)
-        # 阻塞线程 等执行完
-        join_thread(thread_lst)
 
 
 if __name__ == '__main__':

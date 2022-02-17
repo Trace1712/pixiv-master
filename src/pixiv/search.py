@@ -8,7 +8,7 @@ from thread_factory import *
 
 class PixivSearch(PixivBase):
 
-    def __init__(self, cookie='', thread_number=3, search='', page=1, star_number=50, use_proxy=False):
+    def __init__(self, cookie='', search='', page=1, star_number=100, use_proxy=False):
         """
         根据关键词搜索图片
         :param cookie: cookie
@@ -17,7 +17,7 @@ class PixivSearch(PixivBase):
         :param page: 搜索页码数(默认为1)
         :param star_number: ♥数(默认为50)
         """
-        super().__init__(cookie, thread_number, use_proxy, star_number)
+        super().__init__(cookie, use_proxy, star_number)
 
         self.search = search
         self.page = page
@@ -29,10 +29,8 @@ class PixivSearch(PixivBase):
         self.info = []
         # 图片ID
         # self.picture_id = []
-        # 创建条件对象
-        self.condition = threading.Condition()
-        # 是否完成任务
-        self.finish = False
+        # 任务是否完成
+        self.finish = []
 
     def set_search(self, key):
         self.search = key
@@ -42,39 +40,49 @@ class PixivSearch(PixivBase):
         获取所有目标URL
         :return:
         """
-        fmt = 'https://www.pixiv.net/ajax/search/illustrations/{}?word={}&order=date_d&mode=all&p={}& s_mode = s_tag & ' \
-              'type = all & lang = zh '
+        fmt = 'https://www.pixiv.net/ajax/search/illustrations/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag&' \
+              'type=all&lang=zh'
         urls = [fmt.format(self.search, self.search, p)
                 for p in range(1, self.page + 1)]
         self.urls = urls
 
-    def run_get_picture_info_producer(self, cnt):
+    def run_get_picture_info_producer(self, thread_factory, cnt):
         """
         获取全部图片URL
+        :param thread_factory:
         :param cnt: info
         :return:
         """
-        producer_run(self.condition, 100, 'producer-{}'.format(cnt["id"]), self.get_picture_info,
-                     ImageData(pid=cnt['id'], title=cnt["title"], user_name=cnt["userName"], tags=cnt["tags"],
-                               user_id=cnt["userId"], description=cnt["description"], width=cnt["width"], height=cnt["height"],
-                               create_date=cnt["createDate"]
-                               ))
+        thread_factory.producer_run(100, self.get_picture_info,
+                                    ImageData(pid=cnt['id'], title=cnt["title"],
+                                              user_name=cnt["userName"], tags=cnt["tags"],
+                                              user_id=cnt["userId"],
+                                              description=cnt["description"],
+                                              width=cnt["width"], height=cnt["height"],
+                                              create_date=cnt["createDate"]
+                                              ))
 
-    def run_download_picture_consumer(self, image):
+        self.finish.append(True)
+
+    def run_download_picture_consumer(self, thread_factory):
         """
         下载图片 消费者
-        :param image: 图片信息
+        :param thread_factory:
         :return:
         """
-        consumer_run(self.condition, 'consumer-download-{}'.format(image['pid']), download, image)
+        while True:
+            if len(self.result) != 0:
+                thread_factory.consumer_run(download, self.result.pop())
+            # 所有图片下载完成, 且获取图片任务全部完成则退出
+            if len(self.result) == 0 and len(self.finish) == len(self.info):
+                break
 
-    def run(self, thread_pool):
+    def run(self, thread_pool, num):
         """
         启动
         :return:
         """
         self.get_urls()
-        self.finish = False
         """
         页数请求少，单线程就行
         """
@@ -88,36 +96,9 @@ class PixivSearch(PixivBase):
             self.info = self.info + _dict['body']['illust']['data']
             logger.info("get picture success {}".format(url))
 
+        thread_factory = ThreadFactory()
         for cnt in self.info:
-            thread_pool.submit(self.run_get_picture_info_producer, cnt)
+            thread_pool.submit(self.run_get_picture_info_producer, thread_factory, cnt)
 
-        for picture in self.result:
-            thread_pool.submit(self.run_download_picture_consumer, picture)
-
-
-if __name__ == '__main__':
-    def cookies():
-        with open("cookies.txt", 'r') as f:
-            _cookies = {}
-            for row in f.read().split(';'):
-                k, v = row.strip().split('=', 1)
-                _cookies[k] = v
-            return _cookies
-
-
-    import requests
-
-    cookies = cookies()
-    url = 'https://www.pixiv.net/ajax/search/artworks/winter?word=winter&order=date_d&mode=all&p=1&s_mode=s_tag&type=all&lang=zh'
-
-    # url = "www.baidu.com"
-    headers = {
-        'X-Requested-With': 'XMLHttpRequest',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                      'Chrome/56.0.2924.87 Safari/537.36'}
-    proxies = {
-        'http': 'http://127.0.0.1:7890',
-        'https': 'https://127.0.0.1:7890'
-    }
-    req = requests.get(url, headers=headers, cookies=cookies, proxies=proxies, allow_redirects=False)
-    print(req.status_code)
+        for _ in range(num):
+            thread_pool.submit(self.run_download_picture_consumer, thread_factory)

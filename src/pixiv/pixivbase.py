@@ -6,7 +6,7 @@ import threading
 
 class PixivBase(abc.ABC):
 
-    def __init__(self, cookie='', thread_number=3, use_proxy=False, start_number=50):
+    def __init__(self, cookie='', use_proxy=False, start_number=50):
         self.cookie = cookie
         self.headers = {
             'X-Requested-With': 'XMLHttpRequest',
@@ -14,7 +14,6 @@ class PixivBase(abc.ABC):
                           'Chrome/56.0.2924.87 Safari/537.36'}
         self.picture_id = []
         self.result = []
-        self.thread_number = thread_number
         # 是否使用代理IP
         self.proxy = use_proxy
         # ⭐
@@ -22,7 +21,7 @@ class PixivBase(abc.ABC):
         self.ip = None
 
     @abc.abstractmethod
-    def run(self, thread_pool):
+    def run(self, thread_pool, num):
         pass
 
     @abc.abstractmethod
@@ -35,23 +34,20 @@ class PixivBase(abc.ABC):
         获取图片 收藏数 浏览量
         :return:
         """
-        _count = 0
-
         # 获取单张图片ID
         pid = str(picture_id.get_info()['pid'])
         # 获取网址
         url = "https://www.pixiv.net/artworks/{}".format(pid)
         req, self.ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
         try:
-            bs = BeautifulSoup(req, 'lxml')
+            bs = BeautifulSoup(req, 'html.parser')
         except Exception as e:
             logger.error(e)
         # 解析html
         for meta in bs.find_all("meta"):
             if len(meta['content']) > 0 and meta['content'][0] == "{":
                 # 处理json数据
-                meta = eval(
-                    meta['content'].replace("false", "'false'").replace("null", "'null'").replace("true","'true'"))
+                meta = eval(replace_data(meta['content']))
                 if 'illust' in meta:
                     # 判断图片是否满足点赞数量的条件
                     if meta['illust'][pid]["likeCount"] >= self.star_number:
@@ -60,5 +56,4 @@ class PixivBase(abc.ABC):
 
                         # 保存图片信息
                         self.result.append(picture_id)
-                        _count += 1
-        logger.info("{} got {} pictures".format(threading.current_thread().getName(), _count))
+                        logger.info("{} got picture {}".format(threading.current_thread().getName(), pid))

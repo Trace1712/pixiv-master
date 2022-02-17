@@ -3,10 +3,9 @@ import logging
 import os
 import datetime
 
-log_path = os.path.dirname(os.getcwd())
-
 
 class Logger:
+
     def __init__(self, loggername):
         # 创建一个logger
         self.logger = logging.getLogger(loggername)

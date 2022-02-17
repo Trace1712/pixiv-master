@@ -1,5 +1,7 @@
 from pixiv.search import PixivSearch
+from pixiv.daily import PixivDaily
 from concurrent.futures import ThreadPoolExecutor
+
 
 def cookies():
     with open("pixiv/cookies.txt", 'r') as f:
@@ -10,34 +12,38 @@ def cookies():
         return _cookies
 
 
-def case1():
-    # key = input('输入搜索关键词')
+def search(num):
     key = "winter"
     search_spider.set_search(key)
-    search_spider.run(threadlocal)
+    search_spider.run(threadPool, num)
 
 
 # def case2():
 #     recommend_spider.run()
 #
 #
-# def case3():
-#     daily_spider.run()
+def daily(num):
+    daily_spider.run(threadPool, num)
 
 
 if __name__ == "__main__":
     cookie = cookies()
-    threadlocal = ThreadPoolExecutor(max_workers=10, thread_name_prefix='search')
+    # 创建共用线程池
+    threadPool = ThreadPoolExecutor(max_workers=20, thread_name_prefix='search')
 
     # 搜索图片
-    search_spider = PixivSearch(cookie=cookie, thread_number=1,
-                                search="", page=1, star_number=1, use_proxy=False)
-    case1()
+    search_spider = PixivSearch(cookie=cookie, page=1, star_number=200, use_proxy=False)
+    # 日常爬虫
+    daily_spider = PixivDaily(cookie=cookie, use_proxy=False)
+
+    search(3)
+
+
+
     # # 推荐图片
     # recommend_spider = PixivRecommend(cookie=cookie, thread_number=3)
     #
-    # # 日常爬虫
-    # daily_spider = PixivDaily(cookie=cookie, thread_number=1)
+
     #
     # threadPool = ThreadPoolExecutor(max_workers=10, thread_name_prefix="pixiv")
     #

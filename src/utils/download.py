@@ -4,7 +4,7 @@ import os
 from logger import Logger
 from ippool import *
 
-logger = Logger("hmk").get_log()
+logger = Logger("pixiv").get_log()
 
 
 def download_picture(url, pid, path, suffix="jpg"):
@@ -18,18 +18,24 @@ def download_picture(url, pid, path, suffix="jpg"):
     """
     name = str(pid) + '.' + suffix
     header = {'Referer': 'https://www.pixiv.net/'}
-    req = requests.get(url, headers=header, stream=True)
-    if not os.path.exists(path):
-        os.mkdir(path)
+    try:
+        req = requests.get(url, headers=header)
+    except Exception as e:
+        logger.info("{} download fail".format(name, e))
+
     if req.status_code == 200:
-        open(path + name, 'wb').write(req.content)  # 将内容写入图片
-        logger.info("{} download success".format(name))
+        if not os.path.exists(path):
+            os.mkdir(path)
+        fp = open(path + name, 'wb')
+        fp.write(req.content)  # 将内容写入图片
+        fp.close()
+        logger.info("{} download success".format(url))
     else:
-        logger.info("{} download fail".format(name))
+        logger.info("{} download fail".format(url))
     del req
 
 
-def download(picture, path="..\\..\\picture\\"):
+def download(picture, path="..\\picture\\"):
     """
     下载图片
     :param path: 图片路径
@@ -105,7 +111,7 @@ def request(headers, cookie, url, use_proxy, ip=None):
             ip = get_ip() if not ip else ip
             proxies = {
                 'http': 'http://' + ip,
-                # 'https': 'https://' + ip
+                'https': 'https://' + ip
             }
             req = requests.get(url, headers=headers, cookies=cookie, proxies=proxies, allow_redirects=False).text
         return req, ip
@@ -114,6 +120,5 @@ def request(headers, cookie, url, use_proxy, ip=None):
 
 
 if __name__ == '__main__':
-    path = "..\\..\\picture\\20210306"
-    if not os.path.exists(path):
-        os.mkdir(path)
+    download_picture("https://i.pximg.net/img-original/img/2022/02/16/21/00/12/96303074_p0.png", '96303074',
+                     '..\\..\\picture\\')

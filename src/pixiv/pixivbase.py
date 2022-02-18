@@ -20,6 +20,10 @@ class PixivBase(abc.ABC):
         self.star_number = start_number
         self.ip = None
 
+        self.finish = []
+
+        self.info = []
+
     @abc.abstractmethod
     def run(self, thread_pool, num):
         pass
@@ -27,6 +31,19 @@ class PixivBase(abc.ABC):
     @abc.abstractmethod
     def get_urls(self):
         pass
+
+    def run_download_picture_consumer(self, thread_factory):
+        """
+        下载图片 消费者
+        :param thread_factory:
+        :return:
+        """
+        while True:
+            if len(self.result) != 0:
+                thread_factory.consumer_run(download, self.result.pop())
+            # 所有图片下载完成, 且获取图片任务全部完成则退出
+            if len(self.result) == 0 and len(self.finish) == len(self.info):
+                break
 
     def get_picture_info(self, picture_id):
         """

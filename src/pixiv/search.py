@@ -28,12 +28,6 @@ class PixivSearch(PixivBase):
 
         self.urls = []
 
-        self.info = []
-        # 任务是否完成
-        self.finish = []
-        # 图片ID
-        # self.picture_id = []
-
     def set_search(self, key="", start_num=100, start_page=1, end_page=2, type='all'):
         """
 
@@ -79,19 +73,6 @@ class PixivSearch(PixivBase):
 
         self.finish.append(True)
 
-    def run_download_picture_consumer(self, thread_factory):
-        """
-        下载图片 消费者
-        :param thread_factory:
-        :return:
-        """
-        while True:
-            if len(self.result) != 0:
-                thread_factory.consumer_run(download, self.result.pop())
-            # 所有图片下载完成, 且获取图片任务全部完成则退出
-            if len(self.result) == 0 and len(self.finish) == len(self.info):
-                break
-
     def run(self, thread_pool, num):
         """
         启动
@@ -110,6 +91,7 @@ class PixivSearch(PixivBase):
             # 获取图片数据
             self.info = self.info + _dict['body']['illust']['data']
             logger.info("get picture success {}".format(url))
+
         logger.info("get total picture {}".format(len(self.info)))
         # get picture info and start download
         thread_factory = ThreadFactory()

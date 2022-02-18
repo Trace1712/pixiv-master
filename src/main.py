@@ -23,16 +23,14 @@ def search(key_word, star_page, end_page, start_num, type, download_num):
     :param download_num:下载图片线程数
     :return:
     """
-    # 搜索图片
+
     search_spider = PixivSearch(cookie=cookie, use_proxy=False)
     search_spider.set_search(key_word, start_page=star_page, end_page=end_page, start_num=start_num, type=type)
     search_spider.run(threadPool, download_num)
 
 
-# def case2():
-#     recommend_spider.run()
-
 def daily(num):
+    daily_spider = PixivDaily(cookie=cookie, use_proxy=False)
     daily_spider.run(threadPool, num)
 
 
@@ -41,10 +39,9 @@ if __name__ == "__main__":
     # 创建共用线程池
     threadPool = ThreadPoolExecutor(max_workers=20, thread_name_prefix='search')
 
-    # 日常爬虫
-    daily_spider = PixivDaily(cookie=cookie, use_proxy=False)
+    daily(5)
 
-    search("winter", 1, 2, 100, 'illustrate', 10)
+    # search("winter", 1, 2, 100, 'illustrate', 10)
 
 
 

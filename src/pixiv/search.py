@@ -7,43 +7,58 @@ from thread_factory import *
 
 
 class PixivSearch(PixivBase):
+    all_search = 'https://www.pixiv.net/ajax/search/illustrations/{}?word={}&order=date_d&mode=all&p={' \
+                 '}&s_mode=s_tag&type=all&lang=zh'
 
-    def __init__(self, cookie='', search='', page=1, star_number=100, use_proxy=False):
+    illustrate_search = 'https://www.pixiv.net/ajax/search/illustrations/{}?word={}&order=date_d&mode=all' \
+                        '&p={}&s_mode=s_tag&type=illust&lang=zh '
+
+    def __init__(self, cookie='', use_proxy=False):
         """
         根据关键词搜索图片
         :param cookie: cookie
-        :thread_number: 线程数(默认为3)
-        :param search: 搜索关键字
-        :param page: 搜索页码数(默认为1)
-        :param star_number: ♥数(默认为50)
         """
-        super().__init__(cookie, use_proxy, star_number)
+        super().__init__(cookie, use_proxy)
 
-        self.search = search
-        self.page = page
-        # 设置抓取的图片须满足的点赞数量
-        self.star_number = star_number
-        # 网页URL
+        self.type = None
+
+        self.page = None
+
+        self.search = None
+
         self.urls = []
-        # info
+
         self.info = []
-        # 图片ID
-        # self.picture_id = []
         # 任务是否完成
         self.finish = []
+        # 图片ID
+        # self.picture_id = []
 
-    def set_search(self, key):
-        self.search = key
+    def set_search(self, key="", start_num=100, start_page=1, end_page=2, type='all'):
+        """
+
+        :param start_page: 起始页码数
+        :param end_page:   终止页码数
+        :param key:       搜索关键字
+        :param start_num: ♥数(默认为100)
+        :param type:      搜索类型，全部 all, 插画 ilustrate
+        :return:
+        """
+        self.search = "{} {}users入り".format(key, self.star_number)
+        self.star_number = start_num
+        self.start_page = start_page
+        self.end_page = end_page if end_page >= start_page else start_page + 1
+        self.type = type
 
     def get_urls(self):
         """
         获取所有目标URL
         :return:
         """
-        fmt = 'https://www.pixiv.net/ajax/search/illustrations/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag&' \
-              'type=all&lang=zh'
+        fmt = PixivSearch.all_search if self.type == 'all' else PixivSearch.illustrate_search
+
         urls = [fmt.format(self.search, self.search, p)
-                for p in range(1, self.page + 1)]
+                for p in range(self.start_page, self.end_page)]
         self.urls = urls
 
     def run_get_picture_info_producer(self, thread_factory, cnt):
@@ -95,7 +110,8 @@ class PixivSearch(PixivBase):
             # 获取图片数据
             self.info = self.info + _dict['body']['illust']['data']
             logger.info("get picture success {}".format(url))
-
+        logger.info("get total picture {}".format(len(self.info)))
+        # get picture info and start download
         thread_factory = ThreadFactory()
         for cnt in self.info:
             thread_pool.submit(self.run_get_picture_info_producer, thread_factory, cnt)

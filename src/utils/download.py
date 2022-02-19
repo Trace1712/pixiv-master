@@ -1,8 +1,8 @@
 import requests
 import threading
 import os
-from logger import Logger
-from ippool import *
+from utils.logger import Logger
+from utils.ippool import *
 
 logger = Logger("pixiv").get_log()
 

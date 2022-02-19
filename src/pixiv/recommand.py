@@ -1,6 +1,6 @@
-from pixivbase import PixivBase
-from download import  download, replace_data, create_thread, join_thread, request
-from src.entity.image_data import ImageData
+from pixiv.pixivbase import PixivBase
+from utils.download import  download, replace_data, create_thread, join_thread, request
+from entity.image_data import ImageData
 import json
 
 

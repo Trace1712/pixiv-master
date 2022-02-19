@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import abc
-from download import *
+from utils.download import *
 import threading
 
 

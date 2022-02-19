@@ -23,7 +23,7 @@ def search(key_word, star_page, end_page, start_num, type, download_num):
     :param download_num:下载图片线程数
     :return:
     """
-
+    print("开始搜索")
     search_spider = PixivSearch(cookie=cookie, use_proxy=False)
     search_spider.set_search(key_word, start_page=star_page, end_page=end_page, start_num=start_num, type=type)
     search_spider.run(threadPool, download_num)

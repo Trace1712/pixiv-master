@@ -1,10 +1,10 @@
-from pixivbase import PixivBase
-from download import *
-from src.entity.image_data import ImageData
+from pixiv.pixivbase import PixivBase
+from utils.download import *
+from entity.image_data import ImageData
 import json
 import requests
 from bs4 import BeautifulSoup
-from thread_factory import *
+from utils.thread_factory import *
 
 
 class PixivDaily(PixivBase):
@@ -14,7 +14,7 @@ class PixivDaily(PixivBase):
     def __init__(self, cookie=None, use_proxy=True):
         super().__init__(cookie, use_proxy=use_proxy)
 
-        self.type = None
+        self.type = 'daily_illustrate_url'
 
         self.num = 50
 

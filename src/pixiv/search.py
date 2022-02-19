@@ -1,9 +1,9 @@
 import sys
-from pixivbase import PixivBase
-from download import *
+from pixiv.pixivbase import PixivBase
+from utils.download import *
 import json
-from src.entity.image_data import ImageData
-from thread_factory import *
+from entity.image_data import ImageData
+from utils.thread_factory import *
 
 
 class PixivSearch(PixivBase):

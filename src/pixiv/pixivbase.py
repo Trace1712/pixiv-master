@@ -1,35 +1,47 @@
 from bs4 import BeautifulSoup
 import abc
+
+from thread_factory import ThreadFactory
 from utils.download import *
 import threading
 
 
 class PixivBase(abc.ABC):
 
-    def __init__(self, cookie='', use_proxy=False, start_number=50):
+    def __init__(self, cookie='', use_proxy=False, start_number=50, thread_pool=None, download_num=50):
         self.cookie = cookie
         self.headers = {
             'X-Requested-With': 'XMLHttpRequest',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) '
                           'Chrome/56.0.2924.87 Safari/537.36'}
         self.picture_id = []
+
         self.result = []
         # 是否使用代理IP
         self.proxy = use_proxy
         # ⭐
         self.star_number = start_number
+
         self.ip = None
 
         self.finish = []
 
         self.info = []
 
+        self.thread_pool = thread_pool
+
+        self.download_num = download_num
+
     @abc.abstractmethod
-    def run(self, thread_pool, num):
+    def run(self):
         pass
 
     @abc.abstractmethod
     def get_urls(self):
+        pass
+
+    @abc.abstractmethod
+    def run_get_picture_info_producer(self, thread_factory, cnt):
         pass
 
     def run_download_picture_consumer(self, thread_factory):
@@ -55,7 +67,7 @@ class PixivBase(abc.ABC):
         pid = str(picture_id.get_info()['pid'])
         # 获取网址
         url = "https://www.pixiv.net/artworks/{}".format(pid)
-        req, self.ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
+        req = request(self.headers, self.cookie, url, self.proxy, self.ip)
         try:
             bs = BeautifulSoup(req, 'html.parser')
         except Exception as e:
@@ -74,3 +86,18 @@ class PixivBase(abc.ABC):
                         # 保存图片信息
                         self.result.append(picture_id)
                         logger.info("{} got picture {}".format(threading.current_thread().getName(), pid))
+
+    def download_task(self):
+        """
+        开始下载
+        :return:
+        """
+        logger.info("get total picture {}".format(len(self.info)))
+
+        # get picture info and start download
+        thread_factory = ThreadFactory()
+        for cnt in self.info:
+            self.thread_pool.submit(self.run_get_picture_info_producer, thread_factory, cnt)
+
+        for _ in range(self.download_num):
+            self.thread_pool.submit(self.run_download_picture_consumer, thread_factory)

@@ -1,9 +1,8 @@
-import sys
 from pixiv.pixivbase import PixivBase
+from thread_factory import ThreadFactory
 from utils.download import *
 import json
 from entity.image_data import ImageData
-from utils.thread_factory import *
 
 
 class PixivSearch(PixivBase):
@@ -13,12 +12,12 @@ class PixivSearch(PixivBase):
     illustrate_search = 'https://www.pixiv.net/ajax/search/illustrations/{}?word={}&order=date_d&mode=all' \
                         '&p={}&s_mode=s_tag&type=illust&lang=zh '
 
-    def __init__(self, cookie='', use_proxy=False):
+    def __init__(self, cookie=None, use_proxy=False, num=50, thread_pool=None, download_num=50):
         """
         根据关键词搜索图片
         :param cookie: cookie
         """
-        super().__init__(cookie, use_proxy)
+        super().__init__(cookie, use_proxy, thread_pool=thread_pool, download_num=download_num)
 
         self.type = None
 
@@ -27,6 +26,8 @@ class PixivSearch(PixivBase):
         self.search = None
 
         self.urls = []
+
+        self.num = num
 
     def set_search(self, key="", start_num=100, start_page=1, end_page=2, type='all'):
         """
@@ -73,7 +74,7 @@ class PixivSearch(PixivBase):
 
         self.finish.append(True)
 
-    def run(self, thread_pool, num):
+    def run(self):
         """
         启动
         :return:
@@ -84,19 +85,13 @@ class PixivSearch(PixivBase):
         """
         while len(self.urls) > 0:
             url = self.urls.pop()
-            req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
-            self.ip = ip
-            # 处理json数据
-            _dict = eval(replace_data(json.loads(json.dumps(req))))
+            req = request(self.headers, self.cookie, url, self.proxy, self.ip)
             # 获取图片数据
-            self.info = self.info + _dict['body']['illust']['data']
+            self.info = self.info + eval(replace_data(json.loads(json.dumps(req))))['body']['illust']['data']
+
             logger.info("get picture success {}".format(url))
 
-        logger.info("get total picture {}".format(len(self.info)))
-        # get picture info and start download
-        thread_factory = ThreadFactory()
-        for cnt in self.info:
-            thread_pool.submit(self.run_get_picture_info_producer, thread_factory, cnt)
+            if len(self.info) > self.num:
+                break
 
-        for _ in range(num):
-            thread_pool.submit(self.run_download_picture_consumer, thread_factory)
+        self.download_task()

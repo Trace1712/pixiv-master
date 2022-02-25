@@ -2,17 +2,18 @@ from pixiv.pixivbase import PixivBase
 from utils.download import *
 from entity.image_data import ImageData
 import json
-import requests
-from bs4 import BeautifulSoup
-from utils.thread_factory import *
 
 
 class PixivDaily(PixivBase):
-
+    # 每日插画
     daily_illustrate_url = 'https://www.pixiv.net/ranking.php?mode=daily&content=illust&p={}&format=json'
 
-    def __init__(self, cookie=None, use_proxy=True):
-        super().__init__(cookie, use_proxy=use_proxy)
+    # 每周插画
+
+    # 每日漫画
+
+    def __init__(self, cookie=None, use_proxy=True, thread_pool=None, download_num=50):
+        super().__init__(cookie, use_proxy=use_proxy, thread_pool=thread_pool, download_num=download_num)
 
         self.type = 'daily_illustrate_url'
 
@@ -26,6 +27,7 @@ class PixivDaily(PixivBase):
     def set_num(self, num, type):
         """
 
+        :param type:
         :param num: 目标数量
         :return:
         """
@@ -58,7 +60,7 @@ class PixivDaily(PixivBase):
 
         self.finish.append(True)
 
-    def run(self, thread_pool, num):
+    def run(self):
         """
         运行搜索功能
         :return:
@@ -66,8 +68,7 @@ class PixivDaily(PixivBase):
         self.get_urls()
         while len(self.urls) > 0:
             url = self.urls.pop()
-            req, ip = request(self.headers, self.cookie, url, self.proxy, self.ip)
-            self.ip = ip
+            req = request(self.headers, self.cookie, url, self.proxy, self.ip)
             # 解析html
             new_data = json.loads(json.dumps(req))
             # 处理json数据
@@ -78,12 +79,4 @@ class PixivDaily(PixivBase):
             if len(self.info) > self.num:
                 break
 
-        logger.info("get total picture {}".format(len(self.info)))
-
-        # get picture info and start download
-        thread_factory = ThreadFactory()
-        for cnt in self.info:
-            thread_pool.submit(self.run_get_picture_info_producer, thread_factory, cnt)
-
-        for _ in range(num):
-            thread_pool.submit(self.run_download_picture_consumer, thread_factory)
+        self.download_task()

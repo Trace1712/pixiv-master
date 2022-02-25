@@ -19,7 +19,7 @@ def download_picture(url, pid, path, suffix="jpg"):
     try:
         req = requests.get(url, headers=header)
     except Exception as e:
-        logger.info("{} download fail".format(name, e))
+        logger.info("{} download fail {}".format(name, e))
 
     if req.status_code == 200:
         if not os.path.exists(path):
@@ -87,5 +87,5 @@ def request(headers, cookie, url, use_proxy, ip=None):
 
 
 if __name__ == '__main__':
-    download_picture("https://i.pximg.net/img-original/img/2022/02/16/21/00/12/96303074_p0.png", '96303074',
+    download_picture("https://i.pximg.net/img-original/img/2020/08/27/19/23/09/83969138_p1.jpg", '96303074',
                      '..\\..\\picture\\')

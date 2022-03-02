@@ -1,3 +1,5 @@
 APScheduler==3.9.0.post1
-beautifulsoup4==4.10.0
+beautifulsoup4~=4.4.0
 requests==2.27.1
+kafka-python==2.0.2
+avro~=1.11.0

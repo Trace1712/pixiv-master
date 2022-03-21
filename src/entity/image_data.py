@@ -4,16 +4,27 @@ class ImageData:
                  create_date="", tags=None):
         if tags is None:
             tags = []
+        # 图片Id
         self.pid = pid
-        self.url = url,
-        self.title = title,
-        self.user_name = user_name,
-        self.star_number = 0,
+        # 图片url
+        self.url = url
+        # 图片名称
+        self.title = title
+        # 用户昵称
+        self.user_name = user_name
+        # 喜欢数
+        self.star_number = 0
+        # 标签
         self.tags = tags
+        # 用户id
         self.user_id = user_id
+        # 图片描述
         self.description = description
+        # 图片宽度
         self.width = width
+        # 图片高度
         self.height = height
+        # 图片上传日期
         self.createDate = create_date
 
     def set_info(self, url, title, user_name, star_number):

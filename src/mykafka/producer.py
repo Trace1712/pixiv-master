@@ -22,5 +22,22 @@ time1 = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 json_obj = {'name': 'fcao', 'value': '0.74', 'descibe': time1}
 request = json_to_pb(json_obj)
 producer = KafkaProducer(bootstrap_servers='127.0.0.1:9092', key_serializer=str.encode)
-producer.send('sample', key=time1, value=request)
+for i in range(2):
+    producer.send('sample', key=time1, value=request)
 producer.flush()
+
+# java post
+# public Map<String, KolStoredReporter> batchAddKols(List<KolUser> users, String platform) throws IOException {
+#         List<BatchAddKolParam.Kol> kols = users.stream()
+#                 .map(this::buildBatchAddKol)
+#                 .collect(Collectors.toList());
+#         BatchAddKolParam param = BatchAddKolParam.builder()
+#                 .source(STORED_KOL_SOURCE_CRAWLER)
+#                 .platform(platform)
+#                 .kols(kols)
+#                 .build();
+#
+#         String result = HttpUtils.post(WITAKE_BATCH_ADD_API, GSON.toJson(param));
+#         return GSON.fromJson(result, new TypeToken<Map<String, KolStoredReporter>>() {
+#         }.getType());
+#     }

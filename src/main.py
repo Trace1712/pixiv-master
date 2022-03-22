@@ -1,3 +1,5 @@
+from apscheduler.schedulers.blocking import BlockingScheduler
+
 from pixiv.search import PixivSearch
 from pixiv.daily import PixivDaily
 from pixiv.recommandAndFollow import PixivFollowAndRecommend

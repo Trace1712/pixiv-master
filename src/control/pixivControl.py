@@ -1,6 +1,7 @@
 import tornado.ioloop
 import tornado.web
 import json
+from pixivService import *
 
 
 class SearchPicture(tornado.web.RequestHandler):
@@ -13,13 +14,14 @@ class SearchPicture(tornado.web.RequestHandler):
         :start_page 起始搜索页码
         :end_page 起始搜索页码
         :start_num 点赞数大于多少
-        :type
+        :type 搜索类型
         """
-        key_word = self.get_argument('key_word')
-        start_page = self.get_argument('start_page')
-        end_page = self.get_argument('end_page')
-        start_page = self.get_argument('start_num')
-        type = self.get_argument('type')
+        # key_word = self.get_argument('key_word')
+        # start_page = self.get_argument('start_page')
+        # end_page = self.get_argument('end_page')
+        # start_page = self.get_argument('start_num')
+        # type = self.get_argument('type')
+        search("winter", 1, 2, 100, 'illustrate')
 
     def post(self):
         """

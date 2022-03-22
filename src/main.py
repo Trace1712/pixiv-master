@@ -3,8 +3,8 @@ from pixiv.daily import PixivDaily
 from pixiv.recommandAndFollow import PixivFollowAndRecommend
 from concurrent.futures import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
-
-sched = BlockingScheduler()
+from pixivControl import *
+# sched = BlockingScheduler()
 download_num = 5
 
 
@@ -32,7 +32,7 @@ def search(key_word, star_page, end_page, start_num, type):
     search_spider.run()
 
 
-@sched.scheduled_job('interval', seconds=3600, id='recommend')
+# @sched.scheduled_job('interval', seconds=3600, id='recommend')
 def recommend():
     """
     获取推荐图片
@@ -41,7 +41,7 @@ def recommend():
     recommend_spider.run()
 
 
-@sched.scheduled_job('interval', seconds=3600, id='daily')
+# @sched.scheduled_job('interval', seconds=3600, id='daily')
 def daily():
     """
     日常任务
@@ -62,6 +62,11 @@ if __name__ == "__main__":
     daily_spider = PixivDaily(cookie=cookie, use_proxy=False, thread_pool=threadPool, download_num=10)
     # 初始化推荐任务
     recommend_spider = PixivFollowAndRecommend(cookie=cookie, use_proxy=False, thread_pool=threadPool, download_num=10)
+
+    application.listen(8868)
+    tornado.ioloop.IOLoop.instance().start()
+
     # recommend()
 
-    search("winter", 1, 2, 100, 'illustrate')
+    # search("winter", 1, 2, 100, 'illustrate')
+    # daily()

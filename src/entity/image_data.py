@@ -1,7 +1,7 @@
 class ImageData:
 
     def __init__(self, pid, url="", title="", user_name="", user_id="", description="", width=0, height=0,
-                 create_date="", tags=None):
+                 create_date="", tags=None, rank=-1, rank_date=""):
         if tags is None:
             tags = []
         # 图片Id
@@ -26,6 +26,10 @@ class ImageData:
         self.height = height
         # 图片上传日期
         self.createDate = create_date
+        # 图片排行榜名次
+        self.rank = rank
+        # 图片排行榜日期
+        self.rank_date = rank_date
 
     def set_info(self, url, title, user_name, star_number):
         """
